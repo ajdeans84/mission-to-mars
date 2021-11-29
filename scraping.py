@@ -19,7 +19,8 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
+        "last_modified": dt.datetime.now(),
+        "hemispheres": hemisphere_data()
     }
 
     # Stop webdriver and return data
@@ -96,6 +97,34 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+def hemisphere_data():
+    #scrape hemisphere data, return image url and title - full code in challenge file
+    executable_path = {'executable_path': ChromeDriverManager().install()}
+    browser = Browser('chrome', **executable_path, headless=False)
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+    html = browser.html
+    img_soup = soup(html, 'html.parser')
+    hemisphere_image_urls = []
+    for i in range(0,4):
+        hemispheres = { }
+        title= img_soup.find_all('h3')[i].text.strip()
+        hemispheres['title'] = title
+        img_urls = img_soup.find_all('div', class_='description')[i]
+        rel_url = img_urls.find_all('a')[0].get('href')
+        new_url = url + rel_url
+        browser.visit(new_url)
+        html = browser.html
+        new_soup = soup(html, 'html.parser')
+        urls = new_soup.find('li')
+        img_url = urls.a['href']
+        img_url = url + img_url
+        hemispheres['img_url'] = img_url
+        hemisphere_image_urls.append(hemispheres)
+    browser.quit()
+    return hemisphere_image_urls
+
 
 if __name__ == "__main__":
 
